@@ -1,0 +1,50 @@
+{
+  "name": "secret-surface",
+  "version": "0.1.0",
+  "description": "Map environment variables and CI secrets across code, docs, and workflows.",
+  "type": "module",
+  "bin": {
+    "secret-surface": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "README.zh-CN.md",
+    "CHANGELOG.md",
+    "CHANGELOG.zh-CN.md",
+    "CONTRIBUTING.md",
+    "CONTRIBUTING.zh-CN.md",
+    "SECURITY.md",
+    "SECURITY.zh-CN.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "check": "npm run build && npm run lint && npm test",
+    "dev": "tsx src/cli.ts"
+  },
+  "keywords": [
+    "secrets",
+    "env",
+    "github-actions",
+    "ci",
+    "security",
+    "cli"
+  ],
+  "author": "maxi-maxima",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.29.0",
+    "@types/node": "^22.15.30",
+    "eslint": "^9.29.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.34.0",
+    "vitest": "^3.2.3"
+  }
+}
