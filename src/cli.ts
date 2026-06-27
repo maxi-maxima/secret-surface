@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { renderText, scanSecrets, writeReports } from "./index.js";
 
 interface CliOptions {
@@ -10,40 +11,56 @@ interface CliOptions {
   out?: string;
 }
 
-async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
-  const options = parseArgs(argv);
-  if (options.command === "help") {
-    console.log(helpText());
-    return;
-  }
-
-  if (options.command === "demo") {
-    const demoRoot = await createDemoWorkspace(options.out ?? path.join(process.cwd(), "reports", "demo-workspace"));
-    const result = await scanSecrets({ root: demoRoot });
-    const reportDir = path.join(process.cwd(), "reports", "demo");
-    await writeReports(result, reportDir);
-    console.log(options.json ? JSON.stringify(result, null, 2) : renderText(result));
-    if (!options.json) console.log(`Reports written to ${reportDir}`);
-    return;
-  }
-
-  const result = await scanSecrets({ root: options.root });
-  if (options.out) {
-    const files = await writeReports(result, options.out);
-    if (!options.json) {
-      console.log(renderText(result));
-      console.log(`Reports written to ${files.markdown}`);
-    }
-    return;
-  }
-
-  console.log(options.json ? JSON.stringify(result, null, 2) : renderText(result));
+export interface CliResult {
+  exitCode: number;
+  stdout: string;
+  stderr: string;
 }
 
-function parseArgs(argv: string[]): CliOptions {
+export async function runCli(argv: string[] = process.argv.slice(2), cwd: string = process.cwd()): Promise<CliResult> {
+  try {
+    const options = parseArgs(argv, cwd);
+    if (options.command === "help") {
+      return { exitCode: 0, stdout: `${helpText()}\n`, stderr: "" };
+    }
+
+    if (options.command === "demo") {
+      const demoRoot = await createDemoWorkspace(options.out ?? path.join(cwd, "reports", "demo-workspace"));
+      const result = await scanSecrets({ root: demoRoot });
+      const reportDir = path.join(cwd, "reports", "demo");
+      await writeReports(result, reportDir);
+      return {
+        exitCode: 0,
+        stdout: options.json ? `${JSON.stringify(result, null, 2)}\n` : `${renderText(result)}\nReports written to ${reportDir}\n`,
+        stderr: ""
+      };
+    }
+
+    const result = await scanSecrets({ root: options.root });
+    if (options.out) {
+      const files = await writeReports(result, options.out);
+      return {
+        exitCode: 0,
+        stdout: options.json ? "" : `${renderText(result)}\nReports written to ${files.markdown}\n`,
+        stderr: ""
+      };
+    }
+
+    return {
+      exitCode: 0,
+      stdout: options.json ? `${JSON.stringify(result, null, 2)}\n` : `${renderText(result)}\n`,
+      stderr: ""
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { exitCode: 1, stdout: "", stderr: `secret-surface: ${message}\n` };
+  }
+}
+
+function parseArgs(argv: string[], cwd: string): CliOptions {
   const args = [...argv];
   const command = readCommand(args);
-  let root = process.cwd();
+  let root = cwd;
   let json = false;
   let out: string | undefined;
 
@@ -96,7 +113,7 @@ async function createDemoWorkspace(root: string): Promise<string> {
     "export const stripeKey = process.env.STRIPE_SECRET_KEY;\nexport const apiUrl = import.meta.env.VITE_API_URL;\n",
     "utf8"
   );
-  await writeFile(path.join(resolved, ".env.example"), "STRIPE_SECRET_KEY=\nDATABASE_URL=\n", "utf8");
+  await writeFile(path.join(resolved, ".env.example"), "STRIPE_SECRET_KEY=\nDATA...\n", "utf8");
   await writeFile(
     path.join(resolved, ".github", "workflows", "release.yml"),
     "name: Release\non: workflow_dispatch\njobs:\n  publish:\n    runs-on: ubuntu-latest\n    env:\n      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}\n    steps:\n      - run: npm publish\n",
@@ -122,12 +139,16 @@ Usage:
 Examples:
   secret-surface scan .
   secret-surface scan . --out reports/secret-surface
-  secret-surface demo
-`;
+  secret-surface demo`;
 }
 
-main().catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(`secret-surface: ${message}`);
-  process.exitCode = 1;
-});
+function isCliEntryPoint(): boolean {
+  return process.argv[1] ? import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href : false;
+}
+
+if (isCliEntryPoint()) {
+  const result = await runCli();
+  if (result.stdout) process.stdout.write(result.stdout);
+  if (result.stderr) process.stderr.write(result.stderr);
+  process.exitCode = result.exitCode;
+}
