@@ -12,6 +12,7 @@ async function makeWorkspace(): Promise<string> {
     path.join(root, "src", "client.ts"),
     "const token = process.env.OPENAI_API_KEY;\nconst endpoint = import.meta.env.VITE_API_URL;\n"
   );
+  await writeFile(path.join(root, "src", "settings.py"), 'import os\nsentry_dsn = os.getenv("SENTRY_DSN", "")\n');
   await writeFile(path.join(root, ".env.example"), "OPENAI_API_KEY=\nDATABASE_URL=\n");
   await writeFile(
     path.join(root, ".github", "workflows", "ci.yml"),
@@ -31,6 +32,7 @@ describe("scanSecrets", () => {
       "DATABASE_URL",
       "NPM_TOKEN",
       "OPENAI_API_KEY",
+      "SENTRY_DSN",
       "VITE_API_URL"
     ]);
     expect(result.variables.find((variable) => variable.name === "OPENAI_API_KEY")?.sources).toEqual([

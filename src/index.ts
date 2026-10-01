@@ -211,6 +211,7 @@ function extractNamesFromLine(source: SecretReference["source"], relative: strin
             /\bprocess\.env\.([A-Z][A-Z0-9_]{2,})\b/g,
             /\bprocess\.env\[['"]([A-Z][A-Z0-9_]{2,})['"]\]/g,
             /\bimport\.meta\.env\.([A-Z][A-Z0-9_]{2,})\b/g,
+            /\bos\.getenv\(['"]([A-Z][A-Z0-9_]{2,})['"]/g,
             /\bos\.environ(?:\.get)?\(['"]([A-Z][A-Z0-9_]{2,})['"]/g
           ]
         : [/\b([A-Z][A-Z0-9_]{2,})\b/g];

@@ -90,7 +90,7 @@ npx github:maxi-maxima/secret-surface scan . --json
 | Surface | Examples |
 | --- | --- |
 | JavaScript and TypeScript | `process.env.NAME`, `process.env["NAME"]`, `import.meta.env.NAME` |
-| Python | `os.environ["NAME"]`, `os.environ.get("NAME")` |
+| Python | `os.getenv("NAME")`, `os.environ["NAME"]`, `os.environ.get("NAME")` |
 | GitHub Actions | `secrets.NAME`, `env.NAME` |
 | Env examples | `NAME=` in `.env.example` |
 | Markdown docs | Uppercase variable names such as `OPENAI_API_KEY` |

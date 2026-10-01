@@ -86,7 +86,7 @@ npx github:maxi-maxima/secret-surface scan . --json
 | 使用面 | 示例 |
 | --- | --- |
 | JavaScript / TypeScript | `process.env.NAME`, `process.env["NAME"]`, `import.meta.env.NAME` |
-| Python | `os.environ["NAME"]`, `os.environ.get("NAME")` |
+| Python | `os.getenv("NAME")`, `os.environ["NAME"]`, `os.environ.get("NAME")` |
 | GitHub Actions | `secrets.NAME`, `env.NAME` |
 | Env 示例 | `.env.example` 里的 `NAME=` |
 | Markdown 文档 | `OPENAI_API_KEY` 这类大写变量名 |
