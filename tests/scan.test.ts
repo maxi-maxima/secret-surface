@@ -12,7 +12,10 @@ async function makeWorkspace(): Promise<string> {
     path.join(root, "src", "client.ts"),
     "const token = process.env.OPENAI_API_KEY;\nconst endpoint = import.meta.env.VITE_API_URL;\n"
   );
-  await writeFile(path.join(root, "src", "settings.py"), 'import os\nsentry_dsn = os.getenv("SENTRY_DSN", "")\n');
+  await writeFile(
+    path.join(root, "src", "settings.py"),
+    'import os\ndirect_token = os.environ [ "DIRECT_TOKEN" ]\nsentry_dsn = os.getenv("SENTRY_DSN", "")\n'
+  );
   await writeFile(path.join(root, ".env.example"), "OPENAI_API_KEY=\nDATABASE_URL=\n");
   await writeFile(
     path.join(root, ".github", "workflows", "ci.yml"),
@@ -30,6 +33,7 @@ describe("scanSecrets", () => {
 
     expect(result.variables.map((variable) => variable.name)).toEqual([
       "DATABASE_URL",
+      "DIRECT_TOKEN",
       "NPM_TOKEN",
       "OPENAI_API_KEY",
       "SENTRY_DSN",
@@ -41,6 +45,7 @@ describe("scanSecrets", () => {
       "env-example"
     ]);
     expect(result.variables.find((variable) => variable.name === "NPM_TOKEN")?.sources).toEqual(["docs", "workflow"]);
+    expect(result.variables.find((variable) => variable.name === "DIRECT_TOKEN")?.sources).toEqual(["code"]);
   });
 
   test("flags variables used in code without env example coverage", async () => {
